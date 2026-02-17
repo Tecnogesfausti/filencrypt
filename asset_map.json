@@ -1,0 +1,38 @@
+{
+  "31566704": {
+    "alias": "",
+    "name": "USDC",
+    "unit_name": "USDC",
+    "decimals": 6
+  },
+  "386192725": {
+    "alias": "",
+    "name": "goBTC",
+    "unit_name": "goBTC",
+    "decimals": 8
+  },
+  "3203964481": {
+    "alias": "",
+    "name": "Folks Finance",
+    "unit_name": "FOLKS",
+    "decimals": 6
+  },
+  "3413906492": {
+    "alias": "",
+    "name": "FaustiCoin",
+    "unit_name": "FAUC",
+    "decimals": 2
+  },
+  "3430822465": {
+    "alias": "",
+    "name": "TinymanPool2.0 FAUC-ALGO",
+    "unit_name": "TMPOOL2",
+    "decimals": 6
+  },
+  "3453927383": {
+    "alias": "",
+    "name": "AlexCoin",
+    "unit_name": "ALXcn",
+    "decimals": 5
+  }
+}

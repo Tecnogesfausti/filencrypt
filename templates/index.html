@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard de Balances</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <header class="hero">
+        <p class="eyebrow">Wallet Monitor</p>
+        <h1>Balances Algorand en tiempo real</h1>
+        <p class="lead">
+          Datos cargados desde <strong>{{ source }}</strong>. Cuando quieras, este panel se puede extender para transferir ASA
+          usando la seed descifrada.
+        </p>
+        <div class="stats">
+          <article>
+            <span>Total</span>
+            <strong>{{ total }}</strong>
+          </article>
+          <article>
+            <span>Consultas OK</span>
+            <strong>{{ ok_count }}</strong>
+          </article>
+          <article>
+            <span>Con error</span>
+            <strong>{{ fail_count }}</strong>
+          </article>
+        </div>
+        {% if message %}
+        <p class="msg ok">{{ message }}</p>
+        {% endif %}
+        {% if error %}
+        <p class="msg err">{{ error }}</p>
+        {% endif %}
+      </header>
+
+      <section class="panel">
+        <div class="panel-top">
+          <h2>Direcciones</h2>
+          <a class="refresh" href="/">Actualizar</a>
+        </div>
+
+        <form method="post" action="/encrypt-datos" class="send-form compact">
+          <label>
+            Recifrar `direcciones.txt` -> `datos.txt` (contrasena opcional)
+            <input
+              type="password"
+              name="password_override"
+              placeholder="Si vacio, usa LISTA_PASSWORD del servidor"
+            />
+          </label>
+          <button type="submit" class="refresh">Cifrar datos.txt</button>
+        </form>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Crédito</th>
+                <th>Dirección</th>
+                <th>Asset ID</th>
+                <th>Balance ALGO</th>
+                <th>Tokens ASA</th>
+                <th>Detalle Tokens</th>
+                <th>Detalle</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in rows %}
+              <tr>
+                <td>{{ row.nombre }}</td>
+                <td>{{ row.credito }}</td>
+                <td class="mono">{{ row.direccion }}</td>
+                <td>{{ row.asset_label }}</td>
+                <td>
+                  {% if row.balance is not none %}
+                  {{ "%.6f"|format(row.balance) }}
+                  {% else %}
+                  -
+                  {% endif %}
+                </td>
+                <td>{{ row.asa_count }}</td>
+                <td class="mono">
+                  {% if row.assets_preview %}
+                  {{ row.assets_preview|join(", ") }}
+                  {% else %}
+                  -
+                  {% endif %}
+                </td>
+                <td>
+                  <a class="refresh" href="/address/{{ row.direccion }}">Abrir</a>
+                </td>
+                <td>
+                  {% if row.error %}
+                  <span class="badge error">{{ row.error }}</span>
+                  {% else %}
+                  <span class="badge ok">ok</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

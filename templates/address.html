@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detalle de Direccion</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <header class="hero">
+        <p class="eyebrow">Detalle de Cuenta</p>
+        <h1>{{ name }}</h1>
+        <p class="lead">
+          Credito: <strong>{{ credito }}</strong><br />
+          Direccion: <span class="mono">{{ address }}</span><br />
+          Balance ALGO: <strong>{{ "%.6f"|format(algo_balance) }}</strong>
+        </p>
+        <p><a class="refresh" href="/">Volver al dashboard</a></p>
+        {% if message %}
+        <p class="msg ok">{{ message }}</p>
+        {% endif %}
+        {% if error %}
+        <p class="msg err">{{ error }}</p>
+        {% endif %}
+      </header>
+
+      <section class="panel">
+        <div class="panel-top">
+          <h2>Enviar ASA a esta direccion</h2>
+        </div>
+        <p class="lead">
+          Origen: <strong>{{ sender_name }}</strong><br />
+          Cuenta origen: <span class="mono">{{ sender_address }}</span>
+        </p>
+
+        <form method="post" action="/send-asa" class="send-form">
+          <input type="hidden" name="destination" value="{{ address }}" />
+
+          <label>
+            Asset ID
+            <select name="asset_id" required>
+              {% for option in send_asset_options %}
+              <option value="{{ option.asset_id }}" {% if selected_asset == (option.asset_id|string) %}selected{% endif %}>
+                {{ option.label }} | disponible: {{ option.available_human }} (base: {{ option.available }})
+              </option>
+              {% endfor %}
+            </select>
+          </label>
+
+          <label>
+            Cantidad (unidad humana del token)
+            <input type="number" step="any" name="amount" min="0.00000001" required value="1" />
+          </label>
+
+          <label>
+            Mnemonic (opcional)
+            <textarea
+              name="mnemonic_override"
+              rows="3"
+              placeholder="Si lo dejas vacio, usa seed.txt descifrado con LISTA_PASSWORD"
+            ></textarea>
+          </label>
+
+          <button type="submit" class="refresh">Enviar ASA</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-top">
+          <h2>Tokens de la cuenta</h2>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Asset ID</th>
+                <th>Alias</th>
+                <th>Nombre</th>
+                <th>Ticker</th>
+                <th>Decimales</th>
+                <th>Cantidad</th>
+                <th>Frozen</th>
+                <th>Accion</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in assets %}
+              <tr>
+                <td>{{ item.asset_id }}</td>
+                <td>{{ item.alias if item.alias else "-" }}</td>
+                <td>{{ item.name if item.name else "-" }}</td>
+                <td>{{ item.unit_name if item.unit_name else "-" }}</td>
+                <td>{{ item.decimals if item.decimals is not none else "-" }}</td>
+                <td>{{ item.amount }}</td>
+                <td>{{ "si" if item.is_frozen else "no" }}</td>
+                <td>
+                  <a class="refresh" href="/address/{{ address }}?asset_id={{ item.asset_id }}">Usar en envio</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

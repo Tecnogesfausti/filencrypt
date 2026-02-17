@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+webserver.log
+
+# Plaintext/sensitive local data (do not publish)
+direcciones.txt
+palabras.txt
+seed_plain.txt
+mnemonic*.txt
+*.key
+
+# Local env secrets
+.env
+.env.local
