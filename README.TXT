@@ -39,6 +39,10 @@ Cambios recientes recordatorio
   - valida que `cantidad` no supere el saldo disponible del asset en origen
   - `cantidad` en envio se interpreta en unidad humana (respeta `decimals` del asset)
     y se convierte a unidades base automaticamente
+  - opcion de `Opt-in ASA en otra cuenta`:
+    - seleccionas asset
+    - se usa automaticamente la cuenta emisora configurada (seed actual)
+    - se firma transaccion de opt-in (`amt=0`, `sender=receiver=cuenta emisora`)
 - Nueva accion web en dashboard:
   - recifrar `direcciones.txt` -> `datos.txt` desde boton/formulario
   - usa contrasena escrita en el formulario o `LISTA_PASSWORD` si se deja vacio

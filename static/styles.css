@@ -33,6 +33,28 @@ body {
   gap: 1.25rem;
 }
 
+.top-nav {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.nav-link {
+  text-decoration: none;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+}
+
+.nav-link.active {
+  background: linear-gradient(135deg, var(--accent), #0c8f96);
+  color: #fff;
+  border-color: transparent;
+}
+
 .hero,
 .panel {
   background: var(--card);

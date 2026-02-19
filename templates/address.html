@@ -8,6 +8,11 @@
   </head>
   <body>
     <main class="layout">
+      <nav class="top-nav">
+        {% for item in nav_items %}
+        <a class="nav-link {% if current_view == item.key %}active{% endif %}" href="{{ item.href }}">{{ item.label }}</a>
+        {% endfor %}
+      </nav>
       <header class="hero">
         <p class="eyebrow">Detalle de Cuenta</p>
         <h1>{{ name }}</h1>
@@ -68,6 +73,31 @@
 
       <section class="panel">
         <div class="panel-top">
+          <h2>Opt-in ASA en otra cuenta</h2>
+        </div>
+        <p class="lead">
+          Hace opt-in en la misma cuenta emisora (seed actual) para poder recibir este token.
+          Esa cuenta debe tener ALGO suficiente para la transaccion y minimo de reserva.
+        </p>
+
+        <form method="post" action="/optin-asa" class="send-form">
+          <input type="hidden" name="owner_address" value="{{ address }}" />
+
+          <label>
+            Asset ID
+            <select name="asset_id" required>
+              {% for option in send_asset_options %}
+              <option value="{{ option.asset_id }}">{{ option.label }}</option>
+              {% endfor %}
+            </select>
+          </label>
+
+          <button type="submit" class="refresh">Hacer Opt-in</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-top">
           <h2>Tokens de la cuenta</h2>
         </div>
 
@@ -80,7 +110,7 @@
                 <th>Nombre</th>
                 <th>Ticker</th>
                 <th>Decimales</th>
-                <th>Cantidad</th>
+                <th>Cantidad (humana)</th>
                 <th>Frozen</th>
                 <th>Accion</th>
               </tr>
@@ -93,7 +123,7 @@
                 <td>{{ item.name if item.name else "-" }}</td>
                 <td>{{ item.unit_name if item.unit_name else "-" }}</td>
                 <td>{{ item.decimals if item.decimals is not none else "-" }}</td>
-                <td>{{ item.amount }}</td>
+                <td>{{ item.amount_human }}</td>
                 <td>{{ "si" if item.is_frozen else "no" }}</td>
                 <td>
                   <a class="refresh" href="/address/{{ address }}?asset_id={{ item.asset_id }}">Usar en envio</a>

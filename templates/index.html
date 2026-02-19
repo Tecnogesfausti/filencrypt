@@ -8,6 +8,11 @@
   </head>
   <body>
     <main class="layout">
+      <nav class="top-nav">
+        {% for item in nav_items %}
+        <a class="nav-link {% if current_view == item.key %}active{% endif %}" href="{{ item.href }}">{{ item.label }}</a>
+        {% endfor %}
+      </nav>
       <header class="hero">
         <p class="eyebrow">Wallet Monitor</p>
         <h1>Balances Algorand en tiempo real</h1>

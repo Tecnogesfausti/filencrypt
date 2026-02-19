@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pantallas</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <nav class="top-nav">
+        {% for item in nav_items %}
+        <a class="nav-link {% if current_view == item.key %}active{% endif %}" href="{{ item.href }}">{{ item.label }}</a>
+        {% endfor %}
+      </nav>
+
+      <header class="hero">
+        <p class="eyebrow">Navegacion</p>
+        <h1>Pantallas futuras</h1>
+        <p class="lead">Aqui iremos añadiendo nuevas vistas del sistema (envios, historicos, reportes, etc.).</p>
+      </header>
+
+      <section class="panel">
+        <div class="panel-top">
+          <h2>Proximamente</h2>
+        </div>
+        <p class="lead">Esta pagina es el punto de entrada para nuevas funcionalidades.</p>
+        <p><a class="refresh" href="/">Volver a Principal</a></p>
+      </section>
+    </main>
+  </body>
+</html>

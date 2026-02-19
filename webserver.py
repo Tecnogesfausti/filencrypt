@@ -51,6 +51,13 @@ class Registro:
     asset_id: Optional[int]
 
 
+def build_nav(current: str) -> list[dict]:
+    return [
+        {"key": "dashboard", "label": "Principal", "href": "/"},
+        {"key": "pantallas", "label": "Pantallas", "href": "/pantallas"},
+    ]
+
+
 def salt_file_for(encrypted_file: Path) -> Path:
     return Path(f"{encrypted_file}.salt")
 
@@ -362,6 +369,12 @@ def load_sender_mnemonic(mnemonic_override: str = "") -> str:
         raise ValueError(f"No se pudo descifrar seed.txt: {exc}") from exc
 
 
+def mnemonic_to_account(mnemonic_text: str) -> tuple[str, str]:
+    private_key = algo_mnemonic.to_private_key(mnemonic_text.strip())
+    address = account.address_from_private_key(private_key)
+    return private_key, address
+
+
 @app.get("/", response_class=HTMLResponse)
 def dashboard(request: Request):
     registros, source = load_registros()
@@ -380,6 +393,20 @@ def dashboard(request: Request):
             "fail_count": fail_count,
             "message": message,
             "error": error,
+            "nav_items": build_nav("dashboard"),
+            "current_view": "dashboard",
+        },
+    )
+
+
+@app.get("/pantallas", response_class=HTMLResponse)
+def screens(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "screens.html",
+        {
+            "nav_items": build_nav("pantallas"),
+            "current_view": "pantallas",
         },
     )
 
@@ -440,11 +467,12 @@ def address_detail(request: Request, address: str):
                     "unit_name": meta.get("unit_name", ""),
                     "decimals": meta.get("decimals"),
                     "alias": meta.get("alias", ""),
-                    "amount": item.get("amount", 0),
+                    "amount_base": item.get("amount", 0),
+                    "amount_human": base_to_human(item.get("amount", 0), normalize_decimals(meta.get("decimals"))),
                     "is_frozen": item.get("is-frozen", False),
                 }
             )
-        assets.sort(key=lambda x: x["amount"], reverse=True)
+        assets.sort(key=lambda x: x["amount_base"], reverse=True)
         available_ids = {row["asset_id"] for row in assets}
         available_ids.update(asset_map.keys())
         send_asset_options = []
@@ -496,6 +524,8 @@ def address_detail(request: Request, address: str):
             "message": message,
             "error": error,
             "selected_asset": selected_asset,
+            "nav_items": build_nav("dashboard"),
+            "current_view": "dashboard",
         },
     )
 
@@ -522,8 +552,7 @@ def send_asa(
         decimals = normalize_decimals(asset_map.get(asset_id, {}).get("decimals"))
         amount_base = human_to_base(amount, decimals)
         mnemonic_text = load_sender_mnemonic(mnemonic_override)
-        private_key = algo_mnemonic.to_private_key(mnemonic_text)
-        sender = account.address_from_private_key(private_key)
+        private_key, sender = mnemonic_to_account(mnemonic_text)
         sender_info = client.account_info(sender)
         available = 0
         for sender_asset in sender_info.get("assets", []):
@@ -562,5 +591,55 @@ def send_asa(
     except Exception as exc:
         return RedirectResponse(
             f"/address/{destination}?error=" + quote_plus(str(exc)),
+            status_code=303,
+        )
+
+
+@app.post("/optin-asa")
+def optin_asa(
+    asset_id: int = Form(...),
+    owner_address: str = Form(...),
+):
+    if not encoding.is_valid_address(owner_address):
+        return RedirectResponse("/?error=" + quote_plus("Direccion de detalle invalida"), status_code=303)
+
+    client = algod.AlgodClient(ALGOD_TOKEN, ALGOD_ADDRESS)
+    asset_map = load_asset_map()
+    if asset_id not in asset_map:
+        return RedirectResponse(
+            f"/address/{owner_address}?error=" + quote_plus("Asset no encontrado en mapeo interno"),
+            status_code=303,
+        )
+
+    try:
+        sender_mnemonic = load_sender_mnemonic("")
+        target_private_key, target_address = mnemonic_to_account(sender_mnemonic)
+        target_info = client.account_info(target_address)
+        for holding in target_info.get("assets", []):
+            if holding.get("asset-id") == asset_id:
+                return RedirectResponse(
+                    f"/address/{owner_address}?message="
+                    + quote_plus(f"La cuenta {target_address} ya estaba opt-in para ese asset"),
+                    status_code=303,
+                )
+
+        params = client.suggested_params()
+        txn = AssetTransferTxn(
+            sender=target_address,
+            sp=params,
+            receiver=target_address,
+            amt=0,
+            index=asset_id,
+        )
+        signed_txn = txn.sign(target_private_key)
+        txid = client.send_transaction(signed_txn)
+        return RedirectResponse(
+            f"/address/{owner_address}?message="
+            + quote_plus(f"Opt-in correcto en {target_address}. TXID: {txid}"),
+            status_code=303,
+        )
+    except Exception as exc:
+        return RedirectResponse(
+            f"/address/{owner_address}?error=" + quote_plus(str(exc)),
             status_code=303,
         )

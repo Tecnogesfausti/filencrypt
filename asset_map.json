@@ -34,5 +34,101 @@
     "name": "AlexCoin",
     "unit_name": "ALXcn",
     "decimals": 5
+  },
+  "3454796567": {
+    "alias": "",
+    "name": "Yibo",
+    "unit_name": "Liu",
+    "decimals": 2
+  },
+  "3454798476": {
+    "alias": "",
+    "name": "Rayban",
+    "unit_name": "Rban",
+    "decimals": 2
+  },
+  "3454798533": {
+    "alias": "",
+    "name": "fatima",
+    "unit_name": "EUR",
+    "decimals": 2
+  },
+  "3454799437": {
+    "alias": "",
+    "name": "ULUDcoin",
+    "unit_name": "ULUD",
+    "decimals": 5
+  },
+  "3454799680": {
+    "alias": "",
+    "name": "ULUDcoin",
+    "unit_name": "ULUD",
+    "decimals": 5
+  },
+  "3454799841": {
+    "alias": "",
+    "name": "ULUDcoin",
+    "unit_name": "ULUD",
+    "decimals": 5
+  },
+  "3454800245": {
+    "alias": "",
+    "name": "nihangsingh",
+    "unit_name": "EUR",
+    "decimals": 2
+  },
+  "3454800727": {
+    "alias": "",
+    "name": "Plamenov'sCoin",
+    "unit_name": "VALC",
+    "decimals": 7
+  },
+  "3454800989": {
+    "alias": "",
+    "name": "CasasCoin",
+    "unit_name": "CSC",
+    "decimals": 7
+  },
+  "3454801834": {
+    "alias": "",
+    "name": "HugogoCoin",
+    "unit_name": "HGC",
+    "decimals": 3
+  },
+  "3454803138": {
+    "alias": "",
+    "name": "GOKUCOIN",
+    "unit_name": "GOKC",
+    "decimals": 10
+  },
+  "3454803676": {
+    "alias": "",
+    "name": "adgoncoin",
+    "unit_name": "ADGON",
+    "decimals": 0
+  },
+  "3454804488": {
+    "alias": "",
+    "name": "ivacoin",
+    "unit_name": "IVC",
+    "decimals": 0
+  },
+  "3454806691": {
+    "alias": "",
+    "name": "SproutCoin",
+    "unit_name": "SCoin",
+    "decimals": 10
+  },
+  "3454806822": {
+    "alias": "",
+    "name": "MartaCoin",
+    "unit_name": "MTC",
+    "decimals": 2
+  },
+  "3454808813": {
+    "alias": "",
+    "name": "CoinFranTecno",
+    "unit_name": "FranTecn",
+    "decimals": 3
   }
 }
