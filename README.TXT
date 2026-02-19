@@ -4,7 +4,7 @@ Wallet / Filencrypt - Notas Operativas
 Estado actual
 -------------
 - Webserver activo con FastAPI en `webserver.py`.
-- Arranque recomendado persistente con `systemd --user` (unit transient `filencrypt-web.service`).
+- Arranque recomendado persistente con `systemd --user` (unit file versionado en `systemd/filencrypt-web.service`).
 - Archivos cifrados con salt por archivo:
   - `datos.txt.salt`
   - `seed.txt.salt`
@@ -60,8 +60,20 @@ Comandos utiles
 Iniciar webserver en background (opcion simple):
 LISTA_PASSWORD=<TU_PASSWORD> nohup /home/lego/sensores/wallet/filencrypt/.venv/bin/uvicorn webserver:app --host 0.0.0.0 --port 8000 > webserver.log 2>&1 &
 
-Iniciar webserver persistente con systemd de usuario (recomendado):
-systemd-run --user --unit=filencrypt-web --collect --same-dir --setenv=LISTA_PASSWORD=<TU_PASSWORD> --setenv=ALGOD_ADDRESS=https://mainnet-api.algonode.cloud --setenv=API_RATE_LIMIT_PER_MIN=120 /home/lego/sensores/wallet/filencrypt/.venv/bin/uvicorn webserver:app --host 0.0.0.0 --port 8000
+Instalar unit systemd versionado (recomendado):
+mkdir -p ~/.config/systemd/user
+cp systemd/filencrypt-web.service ~/.config/systemd/user/filencrypt-web.service
+
+Crear entorno local (no subirlo a git):
+cp .env.example .env
+# Edita .env y pon LISTA_PASSWORD real
+
+Recargar y habilitar servicio:
+systemctl --user daemon-reload
+systemctl --user enable --now filencrypt-web
+
+Opcional: mantener servicios de usuario vivos tras logout completo:
+loginctl enable-linger "$USER"
 
 Estado del servicio:
 systemctl --user status filencrypt-web --no-pager
@@ -71,6 +83,12 @@ journalctl --user -u filencrypt-web -f
 
 Parar servicio systemd:
 systemctl --user stop filencrypt-web
+
+Arrancar manualmente servicio systemd:
+systemctl --user start filencrypt-web
+
+Deshabilitar arranque automatico:
+systemctl --user disable filencrypt-web
 
 Ver proceso:
 pgrep -af "/home/lego/sensores/wallet/filencrypt/.venv/bin/uvicorn webserver:app"

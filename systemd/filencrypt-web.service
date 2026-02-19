@@ -1,0 +1,18 @@
+[Unit]
+Description=Filencrypt FastAPI Web Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/lego/sensores/wallet/filencrypt
+EnvironmentFile=-/home/lego/sensores/wallet/filencrypt/.env
+Environment=ALGOD_ADDRESS=https://mainnet-api.algonode.cloud
+Environment=API_RATE_LIMIT_PER_MIN=120
+Environment=BALANCE_CACHE_TTL_SECONDS=180
+ExecStart=/home/lego/sensores/wallet/filencrypt/.venv/bin/uvicorn webserver:app --host 0.0.0.0 --port 8000
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
