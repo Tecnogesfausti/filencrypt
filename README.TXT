@@ -132,3 +132,24 @@ Publicar en GitHub (modo seguro)
    - `git branch -M main`
    - `git remote add origin <REPO_URL>`
    - `git push -u origin main`
+
+Archivos sensibles (sin contenido)
+----------------------------------
+- `.env`: variables de entorno privadas (ej. `LISTA_PASSWORD`, endpoints/tokens).
+- `direcciones.txt`: listado de cuentas en claro, direcciones, asset por defecto, password de login y nickname.
+- `palabras.<nickname>.txt`: mnemónico de 25 palabras de cada cuenta (control total de fondos).
+- `seed.txt`: mnemónico cifrado usado por flujos legacy/globales.
+- `seed.txt.salt`: salt para derivar la clave de cifrado de `seed.txt`.
+- `datos.txt`: versión cifrada de `direcciones.txt` (compartible solo junto a contraseña correcta).
+- `datos.txt.salt`: salt para derivar la clave de cifrado de `datos.txt`.
+- `salt.bin`: salt legacy (compatibilidad con cifrados antiguos).
+- `webserver.log` / logs de `journalctl`: pueden incluir direcciones, errores operativos o metadatos sensibles.
+- `asset_map.json`: no contiene claves privadas, pero expone metadatos/mapeos internos de tus assets.
+
+Backup unico cifrado (ZIP)
+--------------------------
+- Archivo: `backup_sensible_filencrypt.zip`
+- Contiene: `.env`, `direcciones.txt`, `datos.txt`, `datos.txt.salt`, `seed.txt`, `seed.txt.salt`, `salt.bin`, `palabras*.txt`
+- Password del ZIP: `fausticoin` (misma que `LISTA_PASSWORD`)
+- Regenerar backup:
+  - `zip -P fausticoin backup_sensible_filencrypt.zip .env direcciones.txt datos.txt datos.txt.salt seed.txt seed.txt.salt salt.bin palabras*.txt`
