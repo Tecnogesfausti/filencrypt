@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <header class="hero">
+        <p class="eyebrow">Acceso</p>
+        <h1>Iniciar sesion</h1>
+        <p class="lead">Selecciona usuario y escribe su clave.</p>
+        {% if message %}
+        <p class="msg ok">{{ message }}</p>
+        {% endif %}
+        {% if error %}
+        <p class="msg err">{{ error }}</p>
+        {% endif %}
+      </header>
+
+      <section class="panel">
+        <form method="post" action="/login" class="send-form">
+          <label>
+            Usuario
+            <select name="address" required>
+              {% for user in users %}
+              <option value="{{ user.direccion }}">{{ user.nombre }} ({{ user.role }})</option>
+              {% endfor %}
+            </select>
+          </label>
+
+          <label>
+            Contrasena
+            <input type="password" name="password" required />
+          </label>
+
+          <button type="submit" class="refresh">Entrar</button>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

@@ -55,6 +55,23 @@ body {
   border-color: transparent;
 }
 
+.nav-user {
+  margin-left: auto;
+  align-self: center;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.nav-logout {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  cursor: pointer;
+}
+
 .hero,
 .panel {
   background: var(--card);

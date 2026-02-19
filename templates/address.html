@@ -12,6 +12,10 @@
         {% for item in nav_items %}
         <a class="nav-link {% if current_view == item.key %}active{% endif %}" href="{{ item.href }}">{{ item.label }}</a>
         {% endfor %}
+        <span class="nav-user">Sesion: {{ current_user.user }} ({{ current_user.role }})</span>
+        <form method="post" action="/logout">
+          <button type="submit" class="nav-logout">Salir</button>
+        </form>
       </nav>
       <header class="hero">
         <p class="eyebrow">Detalle de Cuenta</p>
@@ -29,6 +33,38 @@
         <p class="msg err">{{ error }}</p>
         {% endif %}
       </header>
+
+      {% if can_transact %}
+      <section class="panel">
+        <div class="panel-top">
+          <h2>Enviar ALGO a esta direccion</h2>
+        </div>
+        <p class="lead">
+          Origen: <strong>{{ sender_name }}</strong><br />
+          Cuenta origen: <span class="mono">{{ sender_address }}</span><br />
+          Disponible: <strong>{{ "%.6f"|format(sender_algo_balance) }} ALGO</strong>
+        </p>
+
+        <form method="post" action="/send-algo" class="send-form">
+          <input type="hidden" name="destination" value="{{ address }}" />
+
+          <label>
+            Cantidad ALGO
+            <input type="number" step="any" name="amount" min="0.000001" required value="0.1" />
+          </label>
+
+          <label>
+            Mnemonic (opcional)
+            <textarea
+              name="mnemonic_override"
+              rows="3"
+              placeholder="Si lo dejas vacio, usa seed.txt descifrado con LISTA_PASSWORD"
+            ></textarea>
+          </label>
+
+          <button type="submit" class="refresh">Enviar ALGO</button>
+        </form>
+      </section>
 
       <section class="panel">
         <div class="panel-top">
@@ -95,6 +131,17 @@
           <button type="submit" class="refresh">Hacer Opt-in</button>
         </form>
       </section>
+      {% else %}
+      <section class="panel">
+        <div class="panel-top">
+          <h2>Permisos</h2>
+        </div>
+        <p class="lead">Esta cuenta no tiene seed de 25 palabras asociada. Envio y opt-in ocultos.</p>
+        {% if sender_block_reason %}
+        <p class="msg err">{{ sender_block_reason }}</p>
+        {% endif %}
+      </section>
+      {% endif %}
 
       <section class="panel">
         <div class="panel-top">

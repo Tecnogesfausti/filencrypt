@@ -5,7 +5,7 @@ webserver.log
 
 # Plaintext/sensitive local data (do not publish)
 direcciones.txt
-palabras.txt
+palabras*.txt
 seed_plain.txt
 mnemonic*.txt
 *.key

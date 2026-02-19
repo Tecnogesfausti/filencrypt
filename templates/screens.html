@@ -12,6 +12,10 @@
         {% for item in nav_items %}
         <a class="nav-link {% if current_view == item.key %}active{% endif %}" href="{{ item.href }}">{{ item.label }}</a>
         {% endfor %}
+        <span class="nav-user">Sesion: {{ current_user.user }} ({{ current_user.role }})</span>
+        <form method="post" action="/logout">
+          <button type="submit" class="nav-logout">Salir</button>
+        </form>
       </nav>
 
       <header class="hero">

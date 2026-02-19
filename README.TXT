@@ -5,6 +5,17 @@ Estado actual
 -------------
 - Webserver activo con FastAPI en `webserver.py`.
 - Arranque recomendado persistente con `systemd --user` (unit file versionado en `systemd/filencrypt-web.service`).
+- Login por usuario/clave habilitado (`/login`) con sesion.
+  - el selector usa direccion (unica) y muestra nombre/rol.
+- Roles:
+  - `admin`: acceso a pantallas admin (crear cuentas, recifrar datos)
+  - `user`: uso normal de alumno
+  - envio ALGO/ASA y opt-in dependen de tener seed local `palabras.<nickname>.txt`
+- Pantalla admin de cuentas: `/admin/accounts`
+  - genera cuenta Algorand nueva (25 palabras)
+  - guarda seed en `palabras.<nickname>.txt`
+  - añade registro en `direcciones.txt`
+  - si `Password login` queda vacio, genera clave simple aleatoria
 - Archivos cifrados con salt por archivo:
   - `datos.txt.salt`
   - `seed.txt.salt`
@@ -17,6 +28,11 @@ Cambios recientes recordatorio
 - `fen.py`: ahora guarda salt por archivo (`<archivo>.salt`) para evitar romper descifrado entre archivos.
 - `lista.py`: descifrado con prioridad de `<archivo>.salt` y fallback a `salt.bin`.
 - `lista.py`: `cargar_datos` ignora filas con `asset_id` no numerico para evitar `ValueError`.
+- `direcciones.txt` admite 6 campos:
+  - `credito;nombre;direccion;asset_id;auth;nickname`
+  - `admin` => rol admin, password `admin`
+  - cualquier otro valor => rol user y se usa como password de login
+- se reemplazaron los valores `user` por passwords aleatorios simples (8 chars)
 - `webserver.py`: dashboard de balances desde `datos.txt` descifrado o fallback `direcciones.txt`.
 - `webserver.py`: el dashboard muestra por cuenta:
   - balance ALGO

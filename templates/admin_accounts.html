@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Cuentas</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <nav class="top-nav">
+        {% for item in nav_items %}
+        <a class="nav-link {% if current_view == item.key %}active{% endif %}" href="{{ item.href }}">{{ item.label }}</a>
+        {% endfor %}
+        <span class="nav-user">Sesion: {{ current_user.user }} ({{ current_user.role }})</span>
+        <form method="post" action="/logout">
+          <button type="submit" class="nav-logout">Salir</button>
+        </form>
+      </nav>
+
+      <header class="hero">
+        <p class="eyebrow">Admin</p>
+        <h1>Crear cuentas Algorand (25 palabras)</h1>
+        <p class="lead">Genera direccion + mnemónico y guarda la seed en <code>palabras.&lt;nickname&gt;.txt</code>.</p>
+        {% if message %}
+        <p class="msg ok">{{ message }}</p>
+        {% endif %}
+        {% if error %}
+        <p class="msg err">{{ error }}</p>
+        {% endif %}
+      </header>
+
+      <section class="panel">
+        <div class="panel-top">
+          <h2>Nueva cuenta</h2>
+        </div>
+        <form method="post" action="/admin/accounts/create" class="send-form">
+          <label>
+            Credito
+            <input type="text" name="credito" required placeholder="4/8" />
+          </label>
+
+          <label>
+            Nombre
+            <input type="text" name="nombre" required placeholder="Alumno Ejemplo" />
+          </label>
+
+          <label>
+            Asset ID
+            <input type="number" name="asset_id" required min="1" value="3413906492" />
+          </label>
+
+          <label>
+            Nickname (para palabras.nickname.txt)
+            <input type="text" name="nickname" required placeholder="alumno01" />
+          </label>
+
+          <label>
+            Password login (opcional)
+            <input type="text" name="auth_value" placeholder="vacio = random simple; admin = rol admin" />
+          </label>
+
+          <button type="submit" class="refresh">Crear cuenta</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-top">
+          <h2>Usuarios cargados</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Direccion</th>
+                <th>Role</th>
+                <th>Nickname</th>
+                <th>Asset ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in registros %}
+              <tr>
+                <td>{{ r.nombre }}</td>
+                <td class="mono">{{ r.direccion }}</td>
+                <td>{{ r.role }}</td>
+                <td>{{ r.nickname if r.nickname else "-" }}</td>
+                <td>{{ r.asset_id if r.asset_id is not none else "-" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
