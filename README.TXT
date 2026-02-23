@@ -73,6 +73,12 @@ Cambios recientes recordatorio
 
 Comandos utiles
 ---------------
+Instalacion en maquina limpia (recomendado):
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -U pip
+pip install -r requirements.txt
+
 Iniciar webserver en background (opcion simple):
 LISTA_PASSWORD=<TU_PASSWORD> nohup /home/lego/sensores/wallet/filencrypt/.venv/bin/uvicorn webserver:app --host 0.0.0.0 --port 8000 > webserver.log 2>&1 &
 

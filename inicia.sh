@@ -30,4 +30,4 @@ BALANCE_CACHE_TTL_SECONDS="${BALANCE_CACHE_TTL_SECONDS:-180}"
 
 export ALGOD_ADDRESS API_RATE_LIMIT_PER_MIN BALANCE_CACHE_TTL_SECONDS
 
-exec uvicorn webserver:app --host "$HOST" --port "$PORT"
+exec "$SCRIPT_DIR/.venv/bin/uvicorn" webserver:app --host "$HOST" --port "$PORT"
