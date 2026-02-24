@@ -11,6 +11,18 @@
     "unit_name": "goBTC",
     "decimals": 8
   },
+  "386195940": {
+    "alias": "",
+    "name": "goETH",
+    "unit_name": "goETH",
+    "decimals": 8
+  },
+  "2972980000": {
+    "alias": "",
+    "name": "gobtcALGO",
+    "unit_name": "gbtcALGO",
+    "decimals": 6
+  },
   "3203964481": {
     "alias": "",
     "name": "Folks Finance",
@@ -125,10 +137,28 @@
     "unit_name": "MTC",
     "decimals": 2
   },
+  "3454806826": {
+    "alias": "",
+    "name": "PaulaCoin",
+    "unit_name": "PLC",
+    "decimals": 2
+  },
   "3454808813": {
     "alias": "",
     "name": "CoinFranTecno",
     "unit_name": "FranTecn",
     "decimals": 3
+  },
+  "3455651167": {
+    "alias": "",
+    "name": "SixSevencoin",
+    "unit_name": "eur",
+    "decimals": 5
+  },
+  "3455652206": {
+    "alias": "",
+    "name": "JulCoin",
+    "unit_name": "JulCo",
+    "decimals": 5
   }
 }

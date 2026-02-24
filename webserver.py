@@ -3,12 +3,14 @@ import json
 import os
 import random
 import re
+import smtplib
 import string
 import time
 from os import urandom
 from collections import deque
 from dataclasses import dataclass
 from decimal import Decimal, ROUND_DOWN, InvalidOperation
+from email.message import EmailMessage
 from pathlib import Path
 from typing import Optional
 from urllib.parse import quote_plus
@@ -57,6 +59,7 @@ class Registro:
     auth_value: str
     role: str
     nickname: str
+    email: str
 
 
 def build_nav(current: str, is_admin_user: bool) -> list[dict]:
@@ -120,6 +123,7 @@ def parse_registros(raw_text: str) -> list[Registro]:
         credito, nombre, direccion, asset_raw = parts[0], parts[1], parts[2], parts[3]
         auth_raw = parts[4] if len(parts) >= 5 else "user"
         nickname_raw = parts[5] if len(parts) >= 6 else ""
+        email_raw = parts[6] if len(parts) >= 7 else ""
         if not encoding.is_valid_address(direccion):
             continue
 
@@ -131,6 +135,7 @@ def parse_registros(raw_text: str) -> list[Registro]:
         auth_value = auth_raw.strip() if auth_raw.strip() else "user"
         role = "admin" if auth_value == "admin" else "user"
         nickname = nickname_raw.strip()
+        email = email_raw.strip()
 
         registros.append(
             Registro(
@@ -141,19 +146,26 @@ def parse_registros(raw_text: str) -> list[Registro]:
                 auth_value=auth_value,
                 role=role,
                 nickname=nickname,
+                email=email,
             )
         )
 
     return registros
 
 
-def load_auth_by_address() -> dict[str, tuple[str, str, str, str]]:
-    auth_map: dict[str, tuple[str, str, str, str]] = {}
+def load_auth_by_address() -> dict[str, tuple[str, str, str, str, str]]:
+    auth_map: dict[str, tuple[str, str, str, str, str]] = {}
     if not DIRECCIONES_FILE.exists():
         return auth_map
     raw = DIRECCIONES_FILE.read_text(encoding="utf-8")
     for registro in parse_registros(raw):
-        auth_map[registro.direccion] = (registro.auth_value, registro.role, registro.nombre, registro.nickname)
+        auth_map[registro.direccion] = (
+            registro.auth_value,
+            registro.role,
+            registro.nombre,
+            registro.nickname,
+            registro.email,
+        )
     return auth_map
 
 
@@ -275,8 +287,9 @@ def append_registro_line(
     asset_id: int,
     auth_value: str,
     nickname: str,
+    email: str,
 ) -> None:
-    line = f"{credito};{nombre};{direccion};{asset_id};{auth_value};{nickname}"
+    line = f"{credito};{nombre};{direccion};{asset_id};{auth_value};{nickname};{email}"
     with DIRECCIONES_FILE.open("a", encoding="utf-8") as fh:
         fh.write(line + "\n")
 
@@ -402,13 +415,15 @@ def load_registros() -> tuple[list[Registro], str]:
             registros = parse_registros(decrypted)
             for r in registros:
                 if r.direccion in auth_map:
-                    auth_value, role, nombre, nickname = auth_map[r.direccion]
+                    auth_value, role, nombre, nickname, email = auth_map[r.direccion]
                     r.auth_value = auth_value
                     r.role = role
                     if nombre:
                         r.nombre = nombre
                     if nickname:
                         r.nickname = nickname
+                    if email:
+                        r.email = email
             return registros, "datos.txt (descifrado)"
         except (InvalidToken, UnicodeDecodeError, FileNotFoundError):
             pass
@@ -437,6 +452,7 @@ def fetch_balances(registros: list[Registro]) -> tuple[list[dict], int, int]:
             "credito": item.credito,
             "nombre": item.nombre,
             "direccion": item.direccion,
+            "email": item.email,
             "asset_id": item.asset_id,
             "balance": None,
             "asa_count": 0,
@@ -519,6 +535,112 @@ def fetch_balances(registros: list[Registro]) -> tuple[list[dict], int, int]:
     return rows, ok, fail
 
 
+def build_mail_options(registros: list[Registro]) -> list[dict]:
+    options = []
+    seen = set()
+    for r in sorted(registros, key=lambda x: x.nombre):
+        email = r.email.strip()
+        if not email:
+            continue
+        key = email.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        options.append({"email": email, "label": f"{r.nombre} <{email}>"})
+    return options
+
+
+def resolve_recipients(to_email: str, to_emails: list[str]) -> str:
+    recipients: list[str] = []
+    seen = set()
+    for item in to_emails:
+        email = item.strip()
+        if email and email.lower() not in seen:
+            recipients.append(email)
+            seen.add(email.lower())
+    for item in to_email.split(","):
+        email = item.strip()
+        if email and email.lower() not in seen:
+            recipients.append(email)
+            seen.add(email.lower())
+    return ",".join(recipients)
+
+
+def build_public_accounts_report(registros: list[Registro]) -> str:
+    client = algod.AlgodClient(ALGOD_TOKEN, ALGOD_ADDRESS)
+    asset_map = load_asset_map()
+    asset_map_changed = False
+    meta_cache: dict[int, dict] = {}
+    lines: list[str] = []
+
+    lines.append("Informe publico de cuentas")
+    lines.append("")
+
+    for r in sorted(registros, key=lambda x: x.nombre):
+        lines.append(f"Nombre: {r.nombre}")
+        lines.append(f"Direccion: {r.direccion}")
+        try:
+            info = client.account_info(r.direccion)
+            algo_human = base_to_human(int(info.get("amount", 0)), 6)
+            lines.append(f"ALGO disponible: {algo_human}")
+            assets = info.get("assets", [])
+            if not assets:
+                lines.append("Assets: ninguno")
+            else:
+                lines.append("Assets:")
+                for holding in sorted(assets, key=lambda x: x.get("amount", 0), reverse=True):
+                    asset_id = holding.get("asset-id")
+                    if asset_id is None:
+                        continue
+                    if asset_id in meta_cache:
+                        meta = meta_cache[asset_id]
+                    else:
+                        meta, changed = get_asset_meta(client, asset_map, asset_id)
+                        meta_cache[asset_id] = meta
+                        asset_map_changed = asset_map_changed or changed
+                    decimals = normalize_decimals(meta.get("decimals"))
+                    amount_base = int(holding.get("amount", 0))
+                    amount_human = base_to_human(amount_base, decimals)
+                    lines.append(f"- {asset_label(asset_id, meta)}: {amount_human}")
+        except Exception as exc:
+            lines.append(f"Error consultando cuenta: {exc}")
+        lines.append("")
+
+    if asset_map_changed:
+        save_asset_map(asset_map)
+    return "\n".join(lines).strip() + "\n"
+
+
+def send_gmail_message(
+    to_email: str,
+    subject: str,
+    body: str,
+    gmail_user_override: str = "",
+    gmail_app_password_override: str = "",
+) -> None:
+    gmail_user = gmail_user_override.strip() or os.getenv("GMAIL_USER", "").strip()
+    gmail_app_password = gmail_app_password_override.strip() or os.getenv("GMAIL_APP_PASSWORD", "").strip()
+    if not gmail_user or not gmail_app_password:
+        raise ValueError("Faltan GMAIL_USER o GMAIL_APP_PASSWORD en el entorno")
+
+    recipients = [x.strip() for x in to_email.split(",") if x.strip()]
+    if not recipients:
+        raise ValueError("No hay destinatarios validos")
+
+    msg = EmailMessage()
+    msg["Subject"] = subject.strip() or "Informe publico de cuentas"
+    msg["From"] = f"Filencrypt Admin <{gmail_user}>"
+    msg["To"] = ", ".join(recipients)
+    msg.set_content(body)
+
+    with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
+        server.login(gmail_user, gmail_app_password)
+        server.send_message(msg)
+
+
 def load_sender_mnemonic(mnemonic_override: str = "") -> str:
     if mnemonic_override.strip():
         return mnemonic_override.strip()
@@ -596,9 +718,14 @@ def dashboard(request: Request):
 
     current_user = get_current_user(request)
     registros, source = load_registros()
+    mail_options = build_mail_options(registros)
     rows, ok_count, fail_count = fetch_balances(registros) if registros else ([], 0, 0)
     message = request.query_params.get("message", "")
     error = request.query_params.get("error", "")
+
+    admin_flag = bool(current_user and current_user.get("role") == "admin")
+    gmail_user_default = os.getenv("GMAIL_USER", "").strip() if admin_flag else ""
+    gmail_app_password_default = os.getenv("GMAIL_APP_PASSWORD", "").strip() if admin_flag else ""
 
     return templates.TemplateResponse(
         request,
@@ -614,9 +741,107 @@ def dashboard(request: Request):
             "nav_items": build_nav("dashboard", is_admin(request)),
             "current_view": "dashboard",
             "current_user": current_user,
-            "is_admin": bool(current_user and current_user.get("role") == "admin"),
+            "is_admin": admin_flag,
+            "mail_to": "",
+            "mail_subject": "Informe publico de cuentas",
+            "mail_preview": "",
+            "mail_options": mail_options,
+            "gmail_user": gmail_user_default,
+            "gmail_app_password": gmail_app_password_default,
         },
     )
+
+
+@app.post("/mail-preview")
+def mail_preview(
+    request: Request,
+    to_email: str = Form(""),
+    to_emails: list[str] = Form([]),
+    subject: str = Form("Informe publico de cuentas"),
+    gmail_user: str = Form(""),
+    gmail_app_password: str = Form(""),
+):
+    redirect = require_login(request)
+    if redirect:
+        return redirect
+    if not is_admin(request):
+        return RedirectResponse("/?error=" + quote_plus("Solo admin puede enviar correo"), status_code=303)
+
+    current_user = get_current_user(request)
+    registros, source = load_registros()
+    mail_options = build_mail_options(registros)
+    rows, ok_count, fail_count = fetch_balances(registros) if registros else ([], 0, 0)
+    recipients = resolve_recipients(to_email, to_emails)
+    if not recipients:
+        return RedirectResponse("/?error=" + quote_plus("Selecciona al menos un destinatario"), status_code=303)
+
+    try:
+        preview = build_public_accounts_report(registros)
+    except Exception as exc:
+        return RedirectResponse("/?error=" + quote_plus(str(exc)), status_code=303)
+
+    gmail_user_value = gmail_user.strip() or os.getenv("GMAIL_USER", "").strip()
+    gmail_app_password_value = gmail_app_password.strip() or os.getenv("GMAIL_APP_PASSWORD", "").strip()
+
+    return templates.TemplateResponse(
+        request,
+        "index.html",
+        {
+            "source": source,
+            "rows": rows,
+            "total": len(rows),
+            "ok_count": ok_count,
+            "fail_count": fail_count,
+            "message": "",
+            "error": "",
+            "nav_items": build_nav("dashboard", is_admin(request)),
+            "current_view": "dashboard",
+            "current_user": current_user,
+            "is_admin": True,
+            "mail_to": recipients,
+            "mail_subject": subject.strip() or "Informe publico de cuentas",
+            "mail_preview": preview,
+            "mail_options": mail_options,
+            "gmail_user": gmail_user_value,
+            "gmail_app_password": gmail_app_password_value,
+        },
+    )
+
+
+@app.post("/mail-send")
+def mail_send(
+    request: Request,
+    to_email: str = Form(""),
+    to_emails: list[str] = Form([]),
+    subject: str = Form("Informe publico de cuentas"),
+    body: str = Form(...),
+    gmail_user: str = Form(""),
+    gmail_app_password: str = Form(""),
+):
+    redirect = require_login(request)
+    if redirect:
+        return redirect
+    if not is_admin(request):
+        return RedirectResponse("/?error=" + quote_plus("Solo admin puede enviar correo"), status_code=303)
+
+    recipients = resolve_recipients(to_email, to_emails)
+    if not recipients:
+        return RedirectResponse("/?error=" + quote_plus("Selecciona al menos un destinatario"), status_code=303)
+
+    try:
+        send_gmail_message(
+            to_email=recipients,
+            subject=subject,
+            body=body,
+            gmail_user_override=gmail_user,
+            gmail_app_password_override=gmail_app_password,
+        )
+        return RedirectResponse(
+            "/?message=" + quote_plus(f"Correo enviado a {recipients}"),
+            status_code=303,
+        )
+    except Exception as exc:
+        return RedirectResponse("/?error=" + quote_plus(str(exc)), status_code=303)
 
 
 @app.get("/pantallas", response_class=HTMLResponse)
@@ -670,6 +895,7 @@ def admin_accounts_create(
     asset_id: int = Form(...),
     auth_value: str = Form(""),
     nickname: str = Form(...),
+    email: str = Form(""),
 ):
     redirect = require_login(request)
     if redirect:
@@ -704,6 +930,7 @@ def admin_accounts_create(
             asset_id=asset_id,
             auth_value=effective_auth,
             nickname=nickname_clean,
+            email=email.strip(),
         )
         password = os.getenv("LISTA_PASSWORD", "").strip()
         if not password:

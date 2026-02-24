@@ -66,6 +66,50 @@
         </form>
         {% endif %}
 
+        {% if is_admin %}
+        <form method="post" action="/mail-preview" class="send-form compact">
+          <label>
+            Destinatarios (multiseleccion)
+            <select name="to_emails" multiple size="8">
+              {% for option in mail_options %}
+              <option value="{{ option.email }}">{{ option.label }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>
+            Correos extra (opcionales, separados por coma)
+            <input type="text" name="to_email" placeholder="otro@dominio.com" value="{{ mail_to }}" />
+          </label>
+          <label>
+            Asunto
+            <input type="text" name="subject" value="{{ mail_subject }}" />
+          </label>
+          <label>
+            GMAIL_USER (opcional, si vacio usa .env)
+            <input type="text" name="gmail_user" value="{{ gmail_user }}" placeholder="tu@gmail.com" />
+          </label>
+          <label>
+            GMAIL_APP_PASSWORD (opcional, si vacio usa .env)
+            <input type="password" name="gmail_app_password" value="{{ gmail_app_password }}" />
+          </label>
+          <button type="submit" class="refresh">Previsualizar correo</button>
+        </form>
+
+        {% if mail_preview %}
+        <form method="post" action="/mail-send" class="send-form">
+          <input type="hidden" name="to_email" value="{{ mail_to }}" />
+          <input type="hidden" name="subject" value="{{ mail_subject }}" />
+          <input type="hidden" name="gmail_user" value="{{ gmail_user }}" />
+          <input type="hidden" name="gmail_app_password" value="{{ gmail_app_password }}" />
+          <label>
+            Vista previa del mensaje
+            <textarea name="body" rows="16" required>{{ mail_preview }}</textarea>
+          </label>
+          <button type="submit" class="refresh">Enviar correo</button>
+        </form>
+        {% endif %}
+        {% endif %}
+
         <div class="table-wrap">
           <table>
             <thead>
@@ -73,6 +117,7 @@
                 <th>Nombre</th>
                 <th>Crédito</th>
                 <th>Dirección</th>
+                <th>Email</th>
                 <th>Asset ID</th>
                 <th>Balance ALGO</th>
                 <th>Tokens ASA</th>
@@ -87,6 +132,7 @@
                 <td>{{ row.nombre }}</td>
                 <td>{{ row.credito }}</td>
                 <td class="mono">{{ row.direccion }}</td>
+                <td>{{ row.email if row.email else "-" }}</td>
                 <td>{{ row.asset_label }}</td>
                 <td>
                   {% if row.balance is not none %}

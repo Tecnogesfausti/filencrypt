@@ -60,6 +60,11 @@
             <input type="text" name="auth_value" placeholder="vacio = random simple; admin = rol admin" />
           </label>
 
+          <label>
+            Email (opcional)
+            <input type="email" name="email" placeholder="alumno@dominio.com" />
+          </label>
+
           <button type="submit" class="refresh">Crear cuenta</button>
         </form>
       </section>
@@ -76,6 +81,7 @@
                 <th>Direccion</th>
                 <th>Role</th>
                 <th>Nickname</th>
+                <th>Email</th>
                 <th>Asset ID</th>
               </tr>
             </thead>
@@ -86,6 +92,7 @@
                 <td class="mono">{{ r.direccion }}</td>
                 <td>{{ r.role }}</td>
                 <td>{{ r.nickname if r.nickname else "-" }}</td>
+                <td>{{ r.email if r.email else "-" }}</td>
                 <td>{{ r.asset_id if r.asset_id is not none else "-" }}</td>
               </tr>
               {% endfor %}
