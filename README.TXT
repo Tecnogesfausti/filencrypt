@@ -156,7 +156,7 @@ Backup unico cifrado (ZIP)
 --------------------------
 - Archivo: `backup_sensible_filencrypt.zip`
 - Contiene: `.env`, `direcciones.txt`, `datos.txt`, `datos.txt.salt`, `seed.txt`, `seed.txt.salt`, `salt.bin`, `palabras*.txt`
-- Password del ZIP: `justdance` (misma que `LISTA_PASSWORD`)
+- Password del ZIP: `fausticoin`
 - Regenerar backup:
-  - `zip -P justdance backup_sensible_filencrypt.zip .env direcciones.txt datos.txt datos.txt.salt seed.txt seed.txt.salt salt.bin palabras*.txt`
+  - `zip -P fausticoin backup_sensible_filencrypt.zip .env direcciones.txt datos.txt datos.txt.salt seed.txt seed.txt.salt salt.bin palabras*.txt`
 - Tip: usa la misma contraseña que `tecnoges.fausti` para no olvidar claves entre sistemas.
